@@ -183,30 +183,23 @@ class JsonCollector(object):
                 for k in range(len(current_metric)):
                   # for stat in current_metric[k]:
                   if(type(current_metric[k]) is dict):
-                    if ( type(current_metric[k][metric_item]) is str ):
-                      metric.add_sample(name_metric+'_'+metric_item, value = 1, labels={
-                        "network_name": re.sub(r'[:-]', '_', name_curr_json_vnet),
-                        metric_item: current_metric[k][metric_item]
-                        })
-                    else:
+                    if ( type(current_metric[k][metric_item]) is not str ):
                       metric.add_sample(name_metric+'_'+metric_item, value = current_metric[k][metric_item], labels={
                         "network_name": re.sub(r'[:-]', '_', name_curr_json_vnet),
+                        "other_vn": re.sub(r'[:-]', '_', current_metric[k]['other_vn']),
+                        "vrouter": re.sub(r'[:-]', '_', current_metric[k]['vrouter'])
                         # "value": stat
                         # metric_item: str(current_metric[k][metric_item])
                         })
                   else:
                     z = current_metric[k][0][0]
                     server = current_metric[k][1]
-                    if (type(z[metric_item]) is str):
-                      metric.add_sample(name_metric+'_'+metric_item, value = 1, labels={
-                        "network_name": re.sub(r'[:-]', '_', name_curr_json_vnet),
-                        metric_item: str(z[metric_item]),
-                        "server": server
-                        })
-                    else:
+                    if (type(z[metric_item]) is  not str):
                       metric.add_sample(name_metric+'_'+metric_item, value = z[metric_item] , labels={
                         "network_name": re.sub(r'[:-]', '_', name_curr_json_vnet),
-                        "server": server
+                        "server": server,
+                        "other_vn": re.sub(r'[:-]', '_', z['other_vn']),
+                        "vrouter": re.sub(r'[:-]', '_', z['vrouter'])
                         })
 
             yield metric
@@ -305,8 +298,8 @@ class JsonCollector(object):
                       'index': str(k)
                       })
                 else:
-                  print(name_curr_json_vnet)
-                  print(current_metric)
+                  # print(name_curr_json_vnet)
+                  # print(current_metric)
                   for k in range(len(current_metric)):
                     for j in range(len(current_metric[k][0])):
                       metric.add_sample(name_metric, value = int(current_metric[k][0][j]), labels={
