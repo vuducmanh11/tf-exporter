@@ -299,7 +299,7 @@ class JsonCollector(object):
                     for j in range(len(current_metric[k][0])):
                       metric.add_sample(name_metric, value = int(current_metric[k][0][j]), labels={
                         "network_name": re.sub(r'[:-]', '_', name_curr_json_vnet),
-                        "vrouter-agent": current_metric[k][1],
+                        "vrouter_agent": current_metric[k][1],
                         'index': str(j)
                         })
                   # for k in range(len(current_metric[0])):
