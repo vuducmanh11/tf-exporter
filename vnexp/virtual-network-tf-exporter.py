@@ -240,15 +240,10 @@ class JsonCollector(object):
                 current_metric = current_json_vnet['UveVirtualNetworkAgent'][name_metric]
 
                 for k in range(len(current_metric)):
-                  # for stat in current_metric[k]:
-                  if (type(current_metric[k][metric_item]) is str):
-                    metric.add_sample(name_metric+'_'+metric_item, value = 1, labels={
-                      "network_name": re.sub(r'[:-]', '_', name_curr_json_vnet),
-                      metric_item: current_metric[k][metric_item]
-                      })
-                  elif (type(current_metric[k][metric_item]) is int or type(current_metric[k][metric_item]) is float):
+                  if (type(current_metric[k][metric_item]) is int or type(current_metric[k][metric_item]) is float):
                     metric.add_sample(name_metric+'_'+metric_item, value = current_metric[k][metric_item], labels={
-                      "network_name": re.sub(r'[:-]', '_', name_curr_json_vnet)
+                      "network_name": re.sub(r'[:-]', '_', name_curr_json_vnet),
+                      'other_vn': re.sub(r'[:-]', '_', current_metric[k]['other_vn']),
                       })
             yield metric
 
