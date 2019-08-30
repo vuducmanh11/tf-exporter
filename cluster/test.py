@@ -5,12 +5,21 @@ import requests
 from prometheus_client import start_http_server, Metric, REGISTRY, CollectorRegistry
 
 class BgpCollector(object):
+  
   def __init__(self, endpoint):
     self._endpoint = 'http://' + endpoint + ':8081/analytics/uves/bgp-peer/*?flat'
 
   def collect(self):
-
+    bgp_state = {
+      "Idle": '0',
+      "Active": '1' ,
+      "Connect" : '2',
+      "OpenSent": '3',
+      "OpenConfirm": '4',
+      "Established": '5'
+      }
     url = self._endpoint
+    global response
     response = json.loads(requests.get(url).content.decode('UTF-8'))
     json_all_bgp = response['value']
     metric = Metric('bgp_state_info', '', 'gauge')
@@ -19,21 +28,33 @@ class BgpCollector(object):
       conn = json_all_bgp[i]['name'].split(':')
       snode = conn[4]
       dnode = conn[9]
+      print(cbgp['BgpPeerInfoData']['peer_id'])
       if ('BgpPeerInfoData' in cbgp and 'state_info' in cbgp['BgpPeerInfoData']):
-        metric.add_sample('bgp_state_info', value=1, labels={
+        state = cbgp['BgpPeerInfoData']['state_info']['state']
+        metric.add_sample('bgp_state_info', value= int(bgp_state[state]) + 1, labels={
           'bgp_last_state': cbgp['BgpPeerInfoData']['state_info']['last_state'],
-          'bgp_state': cbgp['BgpPeerInfoData']['state_info']['state'],
+          'bgp_state': state,
           'control_node': snode,
-          'peer': dnode
+          'peer': dnode,
+
 
           })
     yield metric
+            
+
 class XmppCollector(object):
   def __init__(self, endpoint):
     self._endpoint = 'http://' + endpoint + ':8081/analytics/uves/xmpp-peer/*?flat'
 
   def collect(self):
-
+    xmpp_state = {
+      "Idle": '0',
+      "Active": '1' ,
+      "Connect" : '2',
+      "OpenSent": '3',
+      "OpenConfirm": '4',
+      "Established": '5'
+      }
     url = self._endpoint
     response = json.loads(requests.get(url).content.decode('UTF-8'))
     json_all_xmpp = response['value']
@@ -53,11 +74,12 @@ class XmppCollector(object):
             'state': 'null'
             })
         else:
-          metric.add_sample('xmpp_state_info', value = 1, labels={
+          state = cxmpp['XmppPeerInfoData']['state_info']['state']
+          metric.add_sample('xmpp_state_info', value = int(xmpp_state[state]) + 1, labels={
             'last_event': cxmpp['XmppPeerInfoData']['event_info']['last_event'],
             'control_node': control_node,
             'compute_node': compute_node,
-            'state': cxmpp['XmppPeerInfoData']['state_info']['state'],  
+            'state': cxmpp['XmppPeerInfoData']['state_info']['state'],
             })
     yield metric
 
@@ -89,11 +111,11 @@ class ClusterCollector(object):
         current_json_node = json_all_node[i]['value']
         current_metric = current_json_node['NodeStatus']['process_info']
         for k in range(len(current_metric)):
-          metric.add_sample('contrail_status', value = 0 if current_metric[k]['process_state'] == 'PROCESS_STATE_EXITED' else 1, labels = {
+          metric.add_sample('contrail_status', value = 1 if current_metric[k]['process_state'] == 'PROCESS_STATE_RUNNING' else 0, labels = {
               'process_name': current_metric[k]['process_name'],
               'process_state': current_metric[k]['process_state'],
               'last_start_time': current_metric[k]['last_start_time'],
-              'node': json_all_node[i]['name'],
+              'node': re.sub('.local','',json_all_node[i]['name']),
               'node_type': re.sub(r'[:-]', '_', self._node[j])
             })
     yield metric
