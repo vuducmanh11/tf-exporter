@@ -58,14 +58,14 @@ class JsonCollector(object):
         for i in range(num_vm):
           current_json_vm = json_all_vm[i]['value']
           vm_uuid = json_all_vm[i]['name']
-          if ('UveVirtualMachineAgent' in current_json_vm and name_metric in current_json_vm['UveVirtualMachineAgent']):
+          if ('UveVirtualMachineAgent' in current_json_vm and name_metric in current_json_vm['UveVirtualMachineAgent'] and 'vm_name' in current_json_vm['UveVirtualMachineAgent'] ):
             current_metric = current_json_vm['UveVirtualMachineAgent'][name_metric]
             metric.add_sample(name_metric, value=1, labels={
               name_metric: current_metric,
               "vm_uuid": vm_uuid,
               "vm_name": current_json_vm['UveVirtualMachineAgent']['vm_name']
               })
-          elif ('UveVirtualMachineAgent' in current_json_vm and name_metric == 'vm_state'):
+          elif ('UveVirtualMachineAgent' in current_json_vm and 'vm_name' in current_json_vm['UveVirtualMachineAgent'] and name_metric == 'vm_state'):
             metric.add_sample(name_metric, value=0, labels={
               'vm_state': 'none',
               "vm_uuid": vm_uuid,

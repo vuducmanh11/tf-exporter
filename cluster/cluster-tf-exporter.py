@@ -426,15 +426,16 @@ class ClusterCollector(object):
       # metric = Metric('contrail_status', '', 'gauge')
       for i in range(number_node):
         current_json_node = json_all_node[i]['value']
-        current_metric = current_json_node['NodeStatus']['process_info']
-        for k in range(len(current_metric)):
-          metric.add_sample('contrail_status', value = 1 if current_metric[k]['process_state'] == 'PROCESS_STATE_RUNNING' else 0, labels = {
-              'process_name': current_metric[k]['process_name'],
-              'process_state': current_metric[k]['process_state'],
-              'last_start_time': current_metric[k]['last_start_time'],
-              'node': re.sub('.local','',json_all_node[i]['name']),
-              'node_type': re.sub(r'[:-]', '_', self._node[j])
-            })
+        if ('NodeStatus' in current_json_node and 'process_info' in current_json_node['NodeStatus']):
+          current_metric = current_json_node['NodeStatus']['process_info']
+          for k in range(len(current_metric)):
+            metric.add_sample('contrail_status', value = 1 if current_metric[k]['process_state'] == 'PROCESS_STATE_RUNNING' else 0, labels = {
+                'process_name': current_metric[k]['process_name'],
+                'process_state': current_metric[k]['process_state'],
+                'last_start_time': current_metric[k]['last_start_time'],
+                'node': re.sub('.local','',json_all_node[i]['name']),
+                'node_type': re.sub(r'[:-]', '_', self._node[j])
+              })
     yield metric
     # Metric
     for j in range(len(urls)):
