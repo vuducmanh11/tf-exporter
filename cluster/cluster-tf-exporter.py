@@ -399,61 +399,10 @@ class XmppCollector(object):
                   })
           yield metric
 
-
-class ClusterCollector(object):
-  def __init__(self, endpoint, uve_type):
-    self._node = uve_type
-    self._endpoint = []
-    for i in range(len(uve_type)):
-      self._endpoint.append('http://' + endpoint + ':8081/analytics/uves/' + uve_type[i] +'/*?flat')
-
-  def collect(self):
-
-    # get metric about control nodes
-    urls = self._endpoint
-
-    metric = Metric('contrail_status', '', 'gauge')
-
-    # Fetch the JSON
-    for j in range(len(urls)):
-
-      response = json.loads(requests.get(urls[j]).content.decode('UTF-8'))
-      json_all_node = response['value']
-      number_node = len(json_all_node)
-      
-      # Add metric system_mem_usage_used
-      
-      # metric = Metric('contrail_status', '', 'gauge')
-      for i in range(number_node):
-        current_json_node = json_all_node[i]['value']
-        if ('NodeStatus' in current_json_node and 'process_info' in current_json_node['NodeStatus']):
-          current_metric = current_json_node['NodeStatus']['process_info']
-          for k in range(len(current_metric)):
-            metric.add_sample('contrail_status', value = 1 if current_metric[k]['process_state'] == 'PROCESS_STATE_RUNNING' else 0, labels = {
-                'process_name': current_metric[k]['process_name'],
-                'process_state': current_metric[k]['process_state'],
-                'last_start_time': current_metric[k]['last_start_time'],
-                'node': re.sub('.local','',json_all_node[i]['name']),
-                'node_type': re.sub(r'[:-]', '_', self._node[j])
-              })
-    yield metric
-    # Metric
-    for j in range(len(urls)):
-
-      response = json.loads(requests.get(urls[j]).content.decode('UTF-8'))
-      json_all_node = response['value']
-      number_node = len(json_all_node)
-      metric = Metric(re.sub(r'[:-]', '_', self._node[j]), 'List of node available', 'gauge')
-      for k in range(number_node):
-        metric.add_sample(re.sub(r'[:-]', '_', self._node[j]), value = 1, labels = {
-          'config_host': json_all_node[k]['name']
-          })
-      yield metric
 if __name__ == '__main__':
 
   registry = CollectorRegistry()
   registry.register(XmppCollector('10.60.17.231'))
   registry.register(BgpCollector('10.60.17.231'))
-  registry.register(ClusterCollector('10.60.17.231',['database-node', 'analytics-node', 'config-database-node', 'control-node', 'config-node']))
   start_http_server(9104, registry=registry)
   while True: time.sleep(1)
